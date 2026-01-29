@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cretaceous Combat: RAGE EDITION</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #87CEEB;
+            --ground-color: #8B4513;
+            --ui-bg: #222;
+            --ui-border: #eee;
+            --trex-color: #2E8B57;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            user-select: none;
+        }
+
+        #game-stage {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 120px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F7FA 100%);
+            transition: background 1s;
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            background-color: var(--ground-color);
+            border-top: 10px solid #5D2906;
+            z-index: 1;
+        }
+
+        #ui-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--ui-bg);
+            border: 4px solid var(--ui-border);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+            box-shadow: 0 10px 0 #000;
+        }
+
+        button {
+            font-family: 'Press Start 2P', cursive;
+            background: #ff4d4d;
+            border: 4px solid #fff;
+            color: white;
+            padding: 15px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 6px 0 #990000;
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 #990000;
+        }
+
+        #battle-log {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            text-align: center;
+            color: #333;
+            font-size: 16px;
+            text-shadow: 2px 2px #fff;
+            pointer-events: none;
+            z-index: 20;
+            line-height: 1.5;
+        }
+
+        .health-container {
+            position: absolute;
+            top: 80px;
+            width: 220px;
+            color: white;
+            text-shadow: 2px 2px 0 #000;
+            z-index: 5;
+        }
+        #player-stats { left: 20px; }
+        #enemy-stats { right: 20px; text-align: right; }
+
+        .hp-bar-bg {
+            width: 100%;
+            height: 20px;
+            background: #555;
+            border: 2px solid white;
+            margin-top: 5px;
+            position: relative;
+        }
+        .hp-bar-fill {
+            height: 100%;
+            background: #00ff00;
+            width: 100%;
+            transition: width 0.2s, background 0.2s;
+        }
+
+        #rage-indicator {
+            display: none;
+            color: red;
+            font-size: 12px;
+            margin-top: 5px;
+            animation: pulseText 0.5s infinite;
+        }
+        @keyframes pulseText {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .sprite {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            image-rendering: pixelated;
+        }
+
+        #trex {
+            margin-left: 10%;
+            width: 120px;
+            height: 120px;
+            background: transparent;
+            box-shadow: 
+                40px 10px 0 0 var(--trex-color),
+                50px 10px 0 0 var(--trex-color),
+                60px 10px 0 0 var(--trex-color),
+                30px 20px 0 0 var(--trex-color),
+                40px 20px 0 0 var(--trex-color),
+                50px 20px 0 0 var(--trex-color),
+                60px 20px 0 0 var(--trex-color),
+                70px 20px 0 0 var(--trex-color),
+                30px 30px 0 0 var(--trex-color),
+                40px 30px 0 0 var(--trex-color),
+                50px 30px 0 0 var(--trex-color),
+                60px 30px 0 0 var(--trex-color),
+                10px 40px 0 0 var(--trex-color),
+                20px 40px 0 0 var(--trex-color),
+                30px 40px 0 0 var(--trex-color),
+                40px 40px 0 0 var(--trex-color),
+                50px 40px 0 0 var(--trex-color),
+                20px 50px 0 0 var(--trex-color),
+                30px 50px 0 0 var(--trex-color),
+                40px 50px 0 0 var(--trex-color),
+                30px 60px 0 0 var(--trex-color),
+                40px 60px 0 0 var(--trex-color),
+                30px 70px 0 0 var(--trex-color),
+                50px 70px 0 0 var(--trex-color),
+                20px 80px 0 0 var(--trex-color),
+                60px 80px 0 0 var(--trex-color);
+            position: relative;
+            z-index: 2;
+            transition: filter 0.3s;
+        }
+
+        .rage-mode {
+            filter: sepia(1) hue-rotate(-60deg) saturate(5) drop-shadow(0 0 8px red);
+            animation: rageShake 0.2s infinite;
+        }
+
+        @keyframes rageShake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        #enemy {
+            margin-right: 10%;
+            width: 100px;
+            height: 100px;
+            z-index: 2;
+            transition: opacity 0.3s;
+        }
+
+        .human-style { background-color: #ffccaa; width: 30px !important; height: 60px !important; box-shadow: 0 0 10px #000; }
+        .stego-style { background-color: #8bc34a; border-radius: 10px 50px 10px 10px; border-top: 10px dashed orange; }
+        .spino-style { background-color: #e91e63; border-radius: 20px; border-top: 20px solid #880e4f; }
+        .raptor-style { background-color: #ff9800; width: 60px !important; height: 60px !important; border-radius: 5px; }
+        .mosa-style { background-color: #03a9f4; width: 140px !important; border-radius: 0 0 50px 50px; opacity: 0.9; }
+
+        .idle { animation: bounce 1s infinite alternate; }
+        @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
+
+        .anim-bite { animation: lunge 0.3s ease-in-out; }
+        @keyframes lunge {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(100px) scale(1.1); }
+            100% { transform: translateX(0); }
+        }
+
+        .anim-stomp { animation: jumpStomp 0.5s ease-in-out; }
+        @keyframes jumpStomp {
+            0% { transform: translateY(0); }
+            40% { transform: translateY(-150px) rotate(-10deg); }
+            60% { transform: translateY(0); }
+            70% { transform: translateY(-20px); }
+            100% { transform: translateY(0); }
+        }
+
+        .anim-run { animation: runOff 1s forwards; }
+        @keyframes runOff {
+            0% { transform: translateX(0) scaleX(1); }
+            20% { transform: translateX(-20px) scaleX(-1); }
+            100% { transform: translateX(-100vw) scaleX(-1); }
+        }
+
+        .anim-hurt { animation: flash 0.5s; }
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-stage">
+        <div id="battle-log">ENCOUNTER STARTED!</div>
+
+        <div class="health-container" id="player-stats">
+            T-REX
+            <div id="rage-indicator">⚠️ RAGE MODE ACTIVE ⚠️</div>
+            <div class="hp-bar-bg"><div class="hp-bar-fill" id="player-hp-bar"></div></div>
+        </div>
+        <div id="trex" class="idle"></div>
+
+        <div class="health-container" id="enemy-stats">
+            <span id="enemy-name">ENEMY</span>
+            <div class="hp-bar-bg"><div class="hp-bar-fill" id="enemy-hp-bar"></div></div>
+        </div>
+        <div id="enemy" class="idle"></div>
+
+        <div class="ground"></div>
+    </div>
+
+    <div id="ui-bar">
+        <button onclick="performAction('bite')">BITE</button>
+        <button onclick="performAction('stomp')">STOMP</button>
+        <button onclick="performAction('run')">RUN</button>
+    </div>
+
+    <script>
+        const player = { maxHp: 100, hp: 100, damage: 15 };
+        let currentEnemy = null;
+        let isPlayerTurn = true;
+        let gameActive = true;
+        let rageMode = false;
+
+        const enemyTypes = [
+            { name: "HUMAN", hp: 30, damage: 5, style: "human-style", text: "It has a stick!" },
+            { name: "VELOCIRAPTOR", hp: 50, damage: 12, style: "raptor-style", text: "Clever girl..." },
+            { name: "STEGOSAURUS", hp: 80, damage: 10, style: "stego-style", text: "Watch that tail!" },
+            { name: "SPINOSAURUS", hp: 120, damage: 18, style: "spino-style", text: "The river king!" },
+            { name: "MOSASAURUS", hp: 150, damage: 25, style: "mosa-style", text: "Ambush from the water!" }
+        ];
+
+        const trex = document.getElementById('trex');
+        const enemyEl = document.getElementById('enemy');
+        const log = document.getElementById('battle-log');
+        const pBar = document.getElementById('player-hp-bar');
+        const eBar = document.getElementById('enemy-hp-bar');
+        const eName = document.getElementById('enemy-name');
+        const rageText = document.getElementById('rage-indicator');
+
+        function spawnEnemy() {
+            const template = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+            currentEnemy = { ...template }; 
+            currentEnemy.maxHp = template.hp;
+
+            enemyEl.className = `idle ${currentEnemy.style}`;
+            eName.innerText = currentEnemy.name;
+            updateHealthUI();
+            
+            if(currentEnemy.name === "MOSASAURUS") {
+                document.getElementById('game-stage').style.background = "linear-gradient(to bottom, #87CEEB 0%, #03a9f4 100%)";
+            } else {
+                document.getElementById('game-stage').style.background = "linear-gradient(to bottom, #87CEEB 0%, #E0F7FA 100%)";
+            }
+
+            log.innerText = `A wild ${currentEnemy.name} appears! ${currentEnemy.text}`;
+            gameActive = true;
+            isPlayerTurn = true;
+            
+            trex.style.transform = "none"; 
+            trex.classList.remove("anim-run");
+            if(!rageMode) trex.classList.add("idle");
+        }
+
+        function checkRage() {
+            const pct = (player.hp / player.maxHp) * 100;
+            if (pct <= 30 && gameActive) {
+                if (!rageMode) {
+                    rageMode = true;
+                    log.innerText = "T-REX IS ENRAGED! DAMAGE DOUBLED!";
+                    trex.classList.add('rage-mode');
+                    trex.classList.remove('idle');
+                    rageText.style.display = "block";
+                    pBar.style.background = "red";
+                }
+            } else {
+                if (rageMode) {
+                    rageMode = false;
+                    trex.classList.remove('rage-mode');
+                    trex.classList.add('idle');
+                    rageText.style.display = "none";
+                    pBar.style.background = "#00ff00";
+                }
+            }
+        }
+
+        function updateHealthUI() {
+            const pHpPct = (player.hp / player.maxHp) * 100;
+            const eHpPct = (currentEnemy.hp / currentEnemy.maxHp) * 100;
+            pBar.style.width = Math.max(0, pHpPct) + "%";
+            eBar.style.width = Math.max(0, eHpPct) + "%";
+            checkRage();
+        }
+
+        function performAction(action) {
+            if (!gameActive || !isPlayerTurn) return;
+            isPlayerTurn = false;
+            let multiplier = rageMode ? 2 : 1;
+            let rageMsg = rageMode ? " (RAGE x2!)" : "";
+
+            if (action === 'bite') {
+                if(!rageMode) trex.classList.remove('idle');
+                void trex.offsetWidth; 
+                trex.classList.add('anim-bite');
+                setTimeout(() => {
+                    let dmg = Math.floor((player.damage + Math.random() * 5) * multiplier);
+                    currentEnemy.hp -= dmg;
+                    log.innerText = `BITE dealt ${dmg} damage!${rageMsg}`;
+                    enemyHurt();
+                }, 300);
+            } else if (action === 'stomp') {
+                if(!rageMode) trex.classList.remove('idle');
+                void trex.offsetWidth;
+                trex.classList.add('anim-stomp');
+                setTimeout(() => {
+                    let dmg = Math.floor(((player.damage * 1.5) + Math.random() * 5) * multiplier);
+                    if (currentEnemy.name === "VELOCIRAPTOR" && Math.random() > 0.5) {
+                        dmg = 0;
+                        log.innerText = "Stomp MISSED! Raptor dodged!";
+                    } else {
+                        currentEnemy.hp -= dmg;
+                        log.innerText = `STOMP dealt ${dmg} damage!${rageMsg}`;
+                        enemyHurt();
+                    }
+                }, 400);
+            } else if (action === 'run') {
+                log.innerText = "Running away to fight another day!";
+                if(rageMode) trex.classList.remove('rage-mode');
+                trex.classList.remove('idle');
+                trex.classList.add('anim-run');
+                gameActive = false;
+                setTimeout(() => { spawnEnemy(); }, 1500);
+                return;
+            }
+
+            setTimeout(() => {
+                trex.classList.remove('anim-bite', 'anim-stomp');
+                if(!rageMode) trex.classList.add('idle');
+            }, 600);
+        }
+
+        function enemyHurt() {
+            enemyEl.classList.add('anim-hurt');
+            updateHealthUI();
+            setTimeout(() => {
+                enemyEl.classList.remove('anim-hurt');
+                if (currentEnemy.hp <= 0) {
+                    victory();
+                } else {
+                    setTimeout(enemyTurn, 1000);
+                }
+            }, 500);
+        }
+
+        function enemyTurn() {
+            if (!gameActive) return;
+            log.innerText = `${currentEnemy.name} attacks!`;
+            enemyEl.style.transform = "translateX(-50px)";
+            setTimeout(() => {
+                let dmg = Math.floor(currentEnemy.damage + Math.random() * 5);
+                player.hp -= dmg;
+                updateHealthUI();
+                log.innerText = `Ouch! Taken ${dmg} damage.`;
+                enemyEl.style.transform = "translateX(0)";
+                trex.classList.add('anim-hurt');
+                setTimeout(() => {
+                    trex.classList.remove('anim-hurt');
+                    if (player.hp <= 0) {
+                        gameOver();
+                    } else {
+                        isPlayerTurn = true;
+                    }
+                }, 500);
+            }, 400);
+        }
+
+        function victory() {
+            log.innerText = "ENEMY DEFEATED! Eating meat to heal...";
+            enemyEl.style.opacity = "0";
+            player.hp = Math.min(player.maxHp, player.hp + 25);
+            updateHealthUI();
+            setTimeout(() => {
+                enemyEl.style.opacity = "1";
+                spawnEnemy();
+            }, 2000);
+        }
+
+        function gameOver() {
+            gameActive = false;
+            trex.classList.remove('rage-mode');
+            log.innerText = "GAME OVER. The T-Rex has fallen.";
+            trex.style.transform = "rotate(90deg) translateY(50px)";
+            trex.classList.remove('idle');
+        }
+
+        spawnEnemy();
+    </script>
+</body>
+</html>
